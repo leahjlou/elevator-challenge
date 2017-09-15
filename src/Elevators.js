@@ -4,6 +4,7 @@ import Floors from './Floors.js';
 
 const MOVE_FLOOR_TIME = 500;
 const OPEN_DOOR_TIME = 500;
+const TRIP_LIMIT_BEFORE_MAINTENANCE = 1;
 
 export default class Elevators extends React.Component {
 	state = {
@@ -23,7 +24,7 @@ export default class Elevators extends React.Component {
 				<Floors count={floorsCount} callElevator={this.callElevator} />
 				<div style={{marginLeft: "50px"}}>
 					{elevators.map((elevator) =>
-						<Elevator {...elevator} />
+						<Elevator key={elevator.index} {...elevator} />
 					)}
 				</div>
 			</div>
@@ -31,17 +32,16 @@ export default class Elevators extends React.Component {
 	}
 
 	initializeElevators = () => {
-		let i = 0;
 		this.setState({
-			elevators: new Array(this.props.count).fill({
-				index: i++,
+			elevators: new Array(this.props.count).fill({}).map((item, index) => ({
+				index: index,
 				currentFloor: 1,
 				open: false,
 				movingDirection: false,
 				tripCount: 0,
 				floorsPassed: 0,
 				maintenance: false,
-			}),
+			})),
 		});
 	}
 
@@ -57,30 +57,33 @@ export default class Elevators extends React.Component {
 	}
 
 	getCalledElevator = floor => {
+		const workingElevators = this.state.elevators.filter(elevator => !elevator.maintenance);
+
 		// First priority: if an elevator is stopped at the floor calling
-		const unoccupiedAtFloor = this.state.elevators.find(elevator =>
+		const unoccupiedAtFloor = workingElevators.find(elevator =>
 			!elevator.movingDirection && elevator.currentFloor === floor
 		);
 		if (unoccupiedAtFloor) return unoccupiedAtFloor;
 
 		// Second priority: if a moving elevator is going to pass
-		const willPass = this.state.elevators.find(elevator =>
+		const willPass = workingElevators.find(elevator =>
 			elevator.movingDirection &&
 			(elevator.movingDirection === "up" && elevator.currentFloor <= floor) ||
 			(elevator.movingDirection === "down" && elevator.currentFloor >= floor)
 		);
 		if (willPass) return willPass;
 
-		const firstUnoccupied = this.state.elevators.find(elevator => !elevator.movingDirection);
-		// TODO: handle case where there are no unoccupied elevators at all, will need to wait
+		const firstUnoccupied = workingElevators.find(elevator => !elevator.movingDirection);
 
 		// Third priority: unoccupied elevator closest to it
-		const closest = this.state.elevators.reduce((closest, elevator) => {
+		const closest = workingElevators.reduce((closest, elevator) => {
 			const floorsBetween = Math.abs(elevator.currentFloor - floor);
 			const currFloorsBetween = Math.abs(closest.currentFloor - floor);
 			return (floorsBetween < currFloorsBetween) ? elevator : closest;
 		}, firstUnoccupied);
 		if (closest) return closest;
+
+		alert("Sorry, no elevators are currently available.");
 	}
 
 	moveElevator = (elevator, destinationFloor) => {
@@ -99,10 +102,14 @@ export default class Elevators extends React.Component {
 		const floorsToMove = Math.abs(floorDiff);
 		// Start moving
 		this.doMove(elevator, movingDirection, floorsToMove, () => {
-			// Reached destination, open and close doors
+			// Done moving, reached destination, open and close doors and update data
+			const newTripCount = elevator.tripCount + 1;
 			this.updateElevatorData(elevator.index, {
 				open: true,
-				// TODO: increase trips and floors, check maintenance
+				tripCount: newTripCount,
+				floorsPassed: elevator.floorsPassed + floorsToMove,
+				movingDirection: false,
+				maintenance: (newTripCount >= TRIP_LIMIT_BEFORE_MAINTENANCE),
 			});
 			// Close door
 			setTimeout(() => {
