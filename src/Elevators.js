@@ -2,6 +2,8 @@ import React from 'react';
 import Elevator from './Elevator.js';
 import Floors from './Floors.js';
 
+const MOVE_FLOOR_TIME = 500;
+
 export default class Elevators extends React.Component {
 	state = {
 		elevators: new Array(this.props.count).fill({
@@ -18,17 +20,20 @@ export default class Elevators extends React.Component {
 		const { elevators } = this.state;
 
 		return (
-			<div>
+			<div style={{display: "flex"}}>
 				<Floors count={floorsCount} callElevator={this.callElevator} />
-				{elevators.map(elevator =>
-					<Elevator data={elevator} />
-				)}
+				<div style={{marginLeft: "50px"}}>
+					{elevators.map((elevator, i) =>
+						<Elevator {...elevator} index={i} />
+					)}
+				</div>
 			</div>
 		);
 	}
 
-	callElevator(floor) {
-		// Call elevator from the given floor
+	callElevator = (floor) => {
+		let destination = prompt("What floor do you want to go to?", "1");
+		destination = parseInt(destination);
 	}
 	
 }
