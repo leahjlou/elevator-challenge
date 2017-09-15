@@ -3,15 +3,16 @@ import Elevator from './Elevator.js';
 import Floors from './Floors.js';
 
 const MOVE_FLOOR_TIME = 500;
+const OPEN_DOOR_TIME = 500;
 
 export default class Elevators extends React.Component {
 	state = {
 		elevators: [],
 	}
 
-	constructor() {
+	constructor(props) {
 		super();
-		this.initializeElevators();
+		this.initializeElevators(props);
 	}
 
 	render() {
@@ -22,19 +23,19 @@ export default class Elevators extends React.Component {
 			<div style={{display: "flex"}}>
 				<Floors count={floorsCount} callElevator={this.callElevator} />
 				<div style={{marginLeft: "50px"}}>
-					{elevators.map((elevator, i) =>
-						<Elevator {...elevator} index={i} />
+					{elevators.map((elevator) =>
+						<Elevator {...elevator} />
 					)}
 				</div>
 			</div>
 		);
 	}
 
-	initializeElevators = () => {
+	initializeElevators = props => {
 		let i = 0;
 		this.setState({
-			elevators: new Array(this.props.count).fill({
-				id: i++,
+			elevators: new Array(props.count).fill({
+				index: i++,
 				currentFloor: 1,
 				open: false,
 				movingDirection: false,
@@ -83,8 +84,59 @@ export default class Elevators extends React.Component {
 		if (closest) return closest;
 	}
 
-	moveElevator = (elevator, destination) => {
-		// TODO
+	moveElevator = (elevator, destinationFloor) => {
+		const floorDiff = elevator.currentFloor - destinationFloor;
+		const movingDirection = (floorDiff > 0) ? "down" : "up";
+		this.updateElevatorData(elevator.index, {
+			movingDirection,
+			open: true,
+		});
+
+		// Close door
+		setTimeout(() => {
+			this.updateElevatorData(elevator.index, {open: false});
+		}, OPEN_DOOR_TIME);
+
+		const floorsToMove = Math.abs(floorDiff);
+		// Start moving
+		this.doMove(elevator, movingDirection, floorsToMove, () => {
+			console.log("Done doing move");
+			// Reached destination, open and close doors
+			this.updateElevatorData(elevator.index, {
+				open: true,
+				// TODO: increase trips and floors, check maintenance
+			});
+			// Close door
+			setTimeout(() => {
+				this.updateElevatorData(elevator.index, {open: false});
+			}, OPEN_DOOR_TIME);
+		});
+	}
+
+	doMove = (elevator, direction, floorsToMove, cb) => {
+		let floor = elevator.currentFloor;
+		for (let i = 0; i < floorsToMove; i++) {
+			floor = direction === "up" ? floor + 1 : floor - 1;
+			setTimeout(() => {
+				console.log("floor", floor);
+				this.updateElevatorData(elevator.index, {currentFloor: floor});
+			}, MOVE_FLOOR_TIME*(i+1));
+		}
+
+		// Run the callback after all moving is done
+		const totalDelay = floorsToMove * MOVE_FLOOR_TIME;
+		setTimeout(cb, totalDelay);
+	}
+
+	updateElevatorData = (elevatorIndex, newData) => {
+		const elevatorsClone = this.state.elevators.slice(0);
+		elevatorsClone[elevatorIndex] = {
+			...elevatorsClone[elevatorIndex],
+			...newData,
+		};
+		this.setState({
+			elevators: elevatorsClone,
+		});
 	}
 	
 }
