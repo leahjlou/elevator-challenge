@@ -8,7 +8,7 @@ export default class Floors extends React.Component {
 		for (let i = 0; i < count; i++) {
 			const floorNo = i+1;
 			floors.push(
-				<div style={{marginBottom: "20px"}}>
+				<div key={floorNo} style={{marginBottom: "20px"}}>
 					Floor #{floorNo}<br />
 					<a href="#" onClick={e => callElevator(floorNo)}>Call elevator</a>
 				</div>

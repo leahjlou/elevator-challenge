@@ -4,7 +4,7 @@ export default class Elevator extends React.Component {
 	render() {
 		const { index, currentFloor, open, movingDirection, tripCount, floorsPassed, maintenance } = this.props;
 		return (
-			<div style={{marginBottom: "20px"}}>
+			<div key={index} style={{marginBottom: "20px"}}>
 				Elevator #{index}<br />
 				Current floor: {currentFloor}<br />
 				Doors are {open ? "open" : "closed"}<br />

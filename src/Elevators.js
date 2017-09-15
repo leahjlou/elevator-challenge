@@ -10,9 +10,8 @@ export default class Elevators extends React.Component {
 		elevators: [],
 	}
 
-	constructor(props) {
-		super();
-		this.initializeElevators(props);
+	componentWillMount() {
+		this.initializeElevators();
 	}
 
 	render() {
@@ -31,10 +30,10 @@ export default class Elevators extends React.Component {
 		);
 	}
 
-	initializeElevators = props => {
+	initializeElevators = () => {
 		let i = 0;
 		this.setState({
-			elevators: new Array(props.count).fill({
+			elevators: new Array(this.props.count).fill({
 				index: i++,
 				currentFloor: 1,
 				open: false,
@@ -60,7 +59,7 @@ export default class Elevators extends React.Component {
 	getCalledElevator = floor => {
 		// First priority: if an elevator is stopped at the floor calling
 		const unoccupiedAtFloor = this.state.elevators.find(elevator =>
-				!elevator.movingDirection && elevator.currentFloor === floor
+			!elevator.movingDirection && elevator.currentFloor === floor
 		);
 		if (unoccupiedAtFloor) return unoccupiedAtFloor;
 
@@ -100,7 +99,6 @@ export default class Elevators extends React.Component {
 		const floorsToMove = Math.abs(floorDiff);
 		// Start moving
 		this.doMove(elevator, movingDirection, floorsToMove, () => {
-			console.log("Done doing move");
 			// Reached destination, open and close doors
 			this.updateElevatorData(elevator.index, {
 				open: true,
@@ -116,9 +114,8 @@ export default class Elevators extends React.Component {
 	doMove = (elevator, direction, floorsToMove, cb) => {
 		let floor = elevator.currentFloor;
 		for (let i = 0; i < floorsToMove; i++) {
-			floor = direction === "up" ? floor + 1 : floor - 1;
 			setTimeout(() => {
-				console.log("floor", floor);
+				floor = direction === "up" ? floor + 1 : floor - 1;
 				this.updateElevatorData(elevator.index, {currentFloor: floor});
 			}, MOVE_FLOOR_TIME*(i+1));
 		}
