@@ -4,7 +4,7 @@ import Floors from './Floors.js';
 
 const MOVE_FLOOR_TIME = 500;
 const OPEN_DOOR_TIME = 500;
-const TRIP_LIMIT_BEFORE_MAINTENANCE = 1;
+const TRIP_LIMIT_BEFORE_MAINTENANCE = 100;
 
 export default class Elevators extends React.Component {
 	state = {
@@ -48,6 +48,10 @@ export default class Elevators extends React.Component {
 	callElevator = (floor) => {
 		let destination = prompt("What floor do you want to go to?", "1");
 		destination = parseInt(destination);
+		if (destination < 1 || destination > this.props.floorsCount) {
+			alert("Invalid floor entered.");
+			return;
+		}
 
 		// Choose which elevator to use
 		const elevator = this.getCalledElevator(floor);
