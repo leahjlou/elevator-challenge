@@ -17,7 +17,7 @@ export default class Floors extends React.Component {
 
 		return (
 			<div>
-				{floors.map(floor => floor)}
+				{floors}
 			</div>
 		);
 	}
